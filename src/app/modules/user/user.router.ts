@@ -21,7 +21,7 @@ router.delete(
   auth(ENUM_USER_ROLE.ADMIN),
   UserController.deleteSingleUser
 );
-
+// get all users
 router.get("/", auth(ENUM_USER_ROLE.ADMIN), UserController.getAllFromDB);
 
 export const UserRouter = router;
