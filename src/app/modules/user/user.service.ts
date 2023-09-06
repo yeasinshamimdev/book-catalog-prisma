@@ -32,6 +32,7 @@ const getSingleUser = async (
       reviewAndRatings: true,
     },
   });
+  //@ts-ignore
   const { password, ...data } = result;
   return data;
 };

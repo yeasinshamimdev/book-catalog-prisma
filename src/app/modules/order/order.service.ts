@@ -1,7 +1,19 @@
-import { Order } from "@prisma/client";
+import { Order, Prisma } from "@prisma/client";
 import prisma from "../../../utils/prismaProvider";
 
-const insertIntoDB = async (data: Order): Promise<Order> => {
+const insertIntoDB = async (
+  data:
+    | (Prisma.Without<
+        Prisma.OrderCreateInput,
+        Prisma.OrderUncheckedCreateInput
+      > &
+        Prisma.OrderUncheckedCreateInput)
+    | (Prisma.Without<
+        Prisma.OrderUncheckedCreateInput,
+        Prisma.OrderCreateInput
+      > &
+        Prisma.OrderCreateInput)
+): Promise<Order> => {
   const result = await prisma.order.create({
     data,
   });

@@ -124,77 +124,77 @@ const getAllFromDB = async (
   };
 };
 
-const getCategoryById = async (
-  categoryId: string,
-  filters: IBookFilterRequest,
-  options: IPaginationOptions
-): Promise<Book> => {
-  const { limit, page, skip } = paginationHelpers.calculatePagination(options);
-  const { search, minPrice, maxPrice, ...filterData } = filters;
+// const getCategoryById = async (
+//   categoryId: string,
+//   filters: IBookFilterRequest,
+//   options: IPaginationOptions
+// ): Promise<Book> => {
+//   const { limit, page, skip } = paginationHelpers.calculatePagination(options);
+//   const { search, minPrice, maxPrice, ...filterData } = filters;
 
-  const andConditions = [];
+//   const andConditions = [];
 
-  if (search) {
-    andConditions.push({
-      OR: bookSearchableFields.map((field) => ({
-        [field]: {
-          contains: search,
-          mode: "insensitive",
-        },
-      })),
-    });
-  }
+//   if (search) {
+//     andConditions.push({
+//       OR: bookSearchableFields.map((field) => ({
+//         [field]: {
+//           contains: search,
+//           mode: "insensitive",
+//         },
+//       })),
+//     });
+//   }
 
-  if (Object.keys(filterData).length > 0) {
-    andConditions.push({
-      AND: Object.keys(filterData).map((key) => {
-        if (bookRelationalFields.includes(key)) {
-          return {
-            [bookRelationalFieldsMapper[key]]: {
-              id: (filterData as any)[key],
-            },
-          };
-        } else {
-          return {
-            [key]: {
-              equals: (filterData as any)[key],
-            },
-          };
-        }
-      }),
-    });
-  }
+//   if (Object.keys(filterData).length > 0) {
+//     andConditions.push({
+//       AND: Object.keys(filterData).map((key) => {
+//         if (bookRelationalFields.includes(key)) {
+//           return {
+//             [bookRelationalFieldsMapper[key]]: {
+//               id: (filterData as any)[key],
+//             },
+//           };
+//         } else {
+//           return {
+//             [key]: {
+//               equals: (filterData as any)[key],
+//             },
+//           };
+//         }
+//       }),
+//     });
+//   }
 
-  const whereConditions: Prisma.BookWhereInput =
-    andConditions.length > 0 ? { AND: andConditions } : {};
+//   const whereConditions: Prisma.BookWhereInput =
+//     andConditions.length > 0 ? { AND: andConditions } : {};
 
-  const result = await prisma.book.findMany({
-    include: {
-      category: true,
-    },
-    where: whereConditions,
-    skip,
-    take: limit,
-    orderBy:
-      options.sortBy && options.sortOrder
-        ? { [options.sortBy]: options.sortOrder }
-        : {
-            createdAt: "desc",
-          },
-  });
-  const total = await prisma.book.count({
-    where: whereConditions,
-  });
+//   const result = await prisma.book.findMany({
+//     include: {
+//       category: true,
+//     },
+//     where: whereConditions,
+//     skip,
+//     take: limit,
+//     orderBy:
+//       options.sortBy && options.sortOrder
+//         ? { [options.sortBy]: options.sortOrder }
+//         : {
+//             createdAt: "desc",
+//           },
+//   });
+//   const total = await prisma.book.count({
+//     where: whereConditions,
+//   });
 
-  return {
-    meta: {
-      total,
-      page,
-      limit,
-    },
-    data: result,
-  };
-};
+//   return {
+//     meta: {
+//       total,
+//       page,
+//       limit,
+//     },
+//     data: result,
+//   };
+// };
 
 const getSingleBook = async (id: string): Promise<Book | null> => {
   const result = await prisma.book.findUnique({
@@ -236,7 +236,7 @@ const deleteSingleBook = async (id: string) => {
 export const BookService = {
   insertIntoDB,
   getAllFromDB,
-  getCategoryById,
+  // getCategoryById,
   getSingleBook,
   updateSingleBook,
   deleteSingleBook,

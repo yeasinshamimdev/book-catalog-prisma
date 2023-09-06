@@ -29,23 +29,23 @@ const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getCategoryById = catchAsync(async (req: Request, res: Response) => {
-  const filters = pick(req.query, bookFilterableFields);
-  const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
-  const categoryId = req.params.id;
-  const result = await BookService.getCategoryById(
-    categoryId,
-    filters,
-    options
-  );
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "category retrieved successful",
-    meta: result.meta,
-    data: result.data,
-  });
-});
+// const getCategoryById = catchAsync(async (req: Request, res: Response) => {
+//   const filters = pick(req.query, bookFilterableFields);
+//   const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+//   const categoryId = req.params.id;
+//   const result = await BookService.getCategoryById(
+//     categoryId,
+//     filters,
+//     options
+//   );
+//   sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: "category retrieved successful",
+//     meta: result.meta,
+//     data: result.data,
+//   });
+// });
 
 const getSingleBook = catchAsync(async (req: Request, res: Response) => {
   const result = await BookService.getSingleBook(req.params.id);
@@ -80,7 +80,7 @@ const deleteSingleBook = catchAsync(async (req: Request, res: Response) => {
 export const BooksController = {
   insertIntoDB,
   getAllFromDB,
-  getCategoryById,
+  // getCategoryById,
   getSingleBook,
   updateSingleBook,
   deleteSingleBook,
