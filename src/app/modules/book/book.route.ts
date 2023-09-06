@@ -23,6 +23,8 @@ router.delete(
   BooksController.deleteSingleBook
 );
 
+// router.get("/:id", BooksController.getCategoryById);
+
 router.get("/:id", BooksController.getSingleBook);
 router.get("/", BooksController.getAllFromDB);
 

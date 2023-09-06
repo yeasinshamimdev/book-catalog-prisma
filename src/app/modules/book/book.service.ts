@@ -1,7 +1,16 @@
-import { Book } from "@prisma/client";
+import { Book, Prisma } from "@prisma/client";
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
+import { paginationHelpers } from "../../../helpers/paginationHelper";
+import { IGenericResponse } from "../../../interfaces/common";
+import { IPaginationOptions } from "../../../interfaces/pagination";
 import prisma from "../../../utils/prismaProvider";
+import {
+  bookRelationalFields,
+  bookRelationalFieldsMapper,
+  bookSearchableFields,
+} from "./book.constants";
+import { IBookFilterRequest } from "./book.interface";
 
 const insertIntoDB = async (data: Book): Promise<Book> => {
   const isBookExist = await prisma.book.findFirst({
@@ -22,13 +31,169 @@ const insertIntoDB = async (data: Book): Promise<Book> => {
   return result;
 };
 
-const getAllFromDB = async (): Promise<Book[]> => {
+const getAllFromDB = async (
+  filters: IBookFilterRequest,
+  options: IPaginationOptions
+): Promise<IGenericResponse<Book[]>> => {
+  const { limit, page, skip } = paginationHelpers.calculatePagination(options);
+  const { search, minPrice, maxPrice, categoryId, ...filterData } = filters;
+
+  const andConditions = [];
+
+  if (minPrice) {
+    andConditions.push({
+      price: {
+        gte: parseFloat(minPrice),
+      },
+    });
+  }
+
+  if (maxPrice) {
+    andConditions.push({
+      price: {
+        lte: parseFloat(maxPrice),
+      },
+    });
+  }
+
+  if (categoryId) {
+    andConditions.push({
+      categoryId: categoryId,
+    });
+  }
+
+  if (search) {
+    andConditions.push({
+      OR: bookSearchableFields.map((field) => ({
+        [field]: {
+          contains: search,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.keys(filterData).map((key) => {
+        if (bookRelationalFields.includes(key)) {
+          return {
+            [bookRelationalFieldsMapper[key]]: {
+              id: (filterData as any)[key],
+            },
+          };
+        } else {
+          return {
+            [key]: {
+              equals: (filterData as any)[key],
+            },
+          };
+        }
+      }),
+    });
+  }
+
+  const whereConditions: Prisma.BookWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
+
   const result = await prisma.book.findMany({
     include: {
       category: true,
     },
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? { [options.sortBy]: options.sortOrder }
+        : {
+            createdAt: "desc",
+          },
   });
-  return result;
+  const total = await prisma.book.count({
+    where: whereConditions,
+  });
+
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: result,
+  };
+};
+
+const getCategoryById = async (
+  categoryId: string,
+  filters: IBookFilterRequest,
+  options: IPaginationOptions
+): Promise<Book> => {
+  const { limit, page, skip } = paginationHelpers.calculatePagination(options);
+  const { search, minPrice, maxPrice, ...filterData } = filters;
+
+  const andConditions = [];
+
+  if (search) {
+    andConditions.push({
+      OR: bookSearchableFields.map((field) => ({
+        [field]: {
+          contains: search,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.keys(filterData).map((key) => {
+        if (bookRelationalFields.includes(key)) {
+          return {
+            [bookRelationalFieldsMapper[key]]: {
+              id: (filterData as any)[key],
+            },
+          };
+        } else {
+          return {
+            [key]: {
+              equals: (filterData as any)[key],
+            },
+          };
+        }
+      }),
+    });
+  }
+
+  const whereConditions: Prisma.BookWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
+
+  const result = await prisma.book.findMany({
+    include: {
+      category: true,
+    },
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? { [options.sortBy]: options.sortOrder }
+        : {
+            createdAt: "desc",
+          },
+  });
+  const total = await prisma.book.count({
+    where: whereConditions,
+  });
+
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: result,
+  };
 };
 
 const getSingleBook = async (id: string): Promise<Book | null> => {
@@ -71,6 +236,7 @@ const deleteSingleBook = async (id: string) => {
 export const BookService = {
   insertIntoDB,
   getAllFromDB,
+  getCategoryById,
   getSingleBook,
   updateSingleBook,
   deleteSingleBook,

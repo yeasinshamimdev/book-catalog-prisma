@@ -7,11 +7,11 @@ const router = express.Router();
 
 router.post(
   "/create-order",
-  auth(ENUM_USER_ROLE.ADMIN),
+  auth(ENUM_USER_ROLE.CUSTOMER),
   OrdersController.insertIntoDB
 );
 
 router.get("/:id", OrdersController.getSingleOrder);
-router.get("/", OrdersController.getAllFromDB);
+router.get("/", auth(ENUM_USER_ROLE.ADMIN), OrdersController.getAllFromDB);
 
 export const OrderRouters = router;

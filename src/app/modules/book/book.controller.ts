@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import httpStatus from "http-status";
 import catchAsync from "../../../utils/catchAsync";
+import pick from "../../../utils/pick";
 import sendResponse from "../../../utils/sendResponse";
+import { bookFilterableFields } from "./book.constants";
 import { BookService } from "./book.service";
 
 const insertIntoDB = catchAsync(async (req: Request, res: Response) => {
@@ -15,12 +17,33 @@ const insertIntoDB = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
-  const result = await BookService.getAllFromDB();
+  const filters = pick(req.query, bookFilterableFields);
+  const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+  const result = await BookService.getAllFromDB(filters, options);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "All books retrieved successful",
-    data: result,
+    meta: result.meta,
+    data: result.data,
+  });
+});
+
+const getCategoryById = catchAsync(async (req: Request, res: Response) => {
+  const filters = pick(req.query, bookFilterableFields);
+  const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+  const categoryId = req.params.id;
+  const result = await BookService.getCategoryById(
+    categoryId,
+    filters,
+    options
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "category retrieved successful",
+    meta: result.meta,
+    data: result.data,
   });
 });
 
@@ -45,17 +68,19 @@ const updateSingleBook = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteSingleBook = catchAsync(async (req: Request, res: Response) => {
-  await BookService.deleteSingleBook(req.params.id);
+  const result = await BookService.deleteSingleBook(req.params.id);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Deleted successful",
+    data: result,
   });
 });
 
 export const BooksController = {
   insertIntoDB,
   getAllFromDB,
+  getCategoryById,
   getSingleBook,
   updateSingleBook,
   deleteSingleBook,
