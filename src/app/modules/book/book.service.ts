@@ -1,7 +1,18 @@
 import { Book } from "@prisma/client";
+import httpStatus from "http-status";
+import ApiError from "../../../errors/ApiError";
 import prisma from "../../../utils/prismaProvider";
 
 const insertIntoDB = async (data: Book): Promise<Book> => {
+  const isBookExist = await prisma.book.findFirst({
+    where: {
+      title: data.title,
+      author: data.author,
+    },
+  });
+  if (isBookExist) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "book already exits");
+  }
   const result = await prisma.book.create({
     data,
     include: {

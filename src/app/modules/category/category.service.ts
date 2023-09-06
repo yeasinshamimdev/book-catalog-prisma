@@ -1,7 +1,17 @@
 import { Category } from "@prisma/client";
+import httpStatus from "http-status";
+import ApiError from "../../../errors/ApiError";
 import prisma from "../../../utils/prismaProvider";
 
 const insertIntoDB = async (data: Category): Promise<Category> => {
+  const isUserExist = await prisma.category.findFirst({
+    where: {
+      title: data.title,
+    },
+  });
+  if (isUserExist) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Category already exist");
+  }
   const result = await prisma.category.create({
     data,
   });
@@ -14,6 +24,15 @@ const getAllFromDB = async (): Promise<Category[]> => {
 };
 
 const getSingleCategory = async (id: string): Promise<Category | null> => {
+  const isUserExist = await prisma.category.findFirst({
+    where: {
+      id,
+    },
+  });
+  if (!isUserExist) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Category ID not exist");
+  }
+
   const result = await prisma.category.findUnique({
     where: {
       id,

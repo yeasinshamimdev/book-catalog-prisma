@@ -1,12 +1,28 @@
 import { User } from "@prisma/client";
 import prisma from "../../../utils/prismaProvider";
 
-const getAllFromDB = async (): Promise<User[]> => {
-  const result = await prisma.user.findMany();
+type UserWithoutPassword = Omit<User, "password">;
+
+const getAllFromDB = async (): Promise<UserWithoutPassword[]> => {
+  const result = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      contactNo: true,
+      address: true,
+      profileImg: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
   return result;
 };
 
-const getSingleUser = async (id: string): Promise<User | null> => {
+const getSingleUser = async (
+  id: string
+): Promise<UserWithoutPassword | null> => {
   const result = await prisma.user.findUnique({
     where: {
       id,
@@ -16,13 +32,14 @@ const getSingleUser = async (id: string): Promise<User | null> => {
       reviewAndRatings: true,
     },
   });
-  return result;
+  const { password, ...data } = result;
+  return data;
 };
 
 const updateSingleUser = async (
   id: string,
   payload: Partial<User>
-): Promise<Partial<User>> => {
+): Promise<UserWithoutPassword> => {
   const result = await prisma.user.update({
     where: {
       id,
@@ -33,7 +50,8 @@ const updateSingleUser = async (
       reviewAndRatings: true,
     },
   });
-  return result;
+  const { password, ...data } = result;
+  return data;
 };
 
 const deleteSingleUser = async (id: string) => {
